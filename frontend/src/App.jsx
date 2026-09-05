@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 function App() {
   const [url, setUrl] = useState('')
@@ -6,6 +6,27 @@ function App() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [online, setOnline] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch('/api/health')
+      .then((response) => {
+        if (!cancelled) {
+          setOnline(response.ok)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setOnline(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -24,7 +45,7 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: url.trim() }),
       })
-      const data = await response.json()
+      const data = await response.json().catch(() => ({}))
 
       if (!response.ok) {
         throw new Error(data.detail || data.message || 'We could not shorten that URL.')
@@ -38,9 +59,13 @@ function App() {
   }
 
   async function copyLink() {
-    await navigator.clipboard.writeText(result.shortUrl)
-    setCopied(true)
-    window.setTimeout(() => setCopied(false), 1800)
+    try {
+      await navigator.clipboard.writeText(result.shortUrl)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1800)
+    } catch {
+      setError('Could not copy the link. Please copy it manually.')
+    }
   }
 
   return (
@@ -50,7 +75,10 @@ function App() {
           <span className="brand-mark">↗</span>
           <span>SnapLink</span>
         </a>
-        <span className="status"><i />Service online</span>
+        <span className={`status${online === false ? ' is-offline' : ''}`}>
+          <i />
+          {online === false ? 'Service offline' : online ? 'Service online' : 'Checking service'}
+        </span>
       </nav>
 
       <main>
@@ -93,6 +121,7 @@ function App() {
                   <button type="button" onClick={copyLink}>{copied ? 'Copied!' : 'Copy'}</button>
                 </div>
                 <p className="original-link">Destination: {result.originalUrl}</p>
+                <p className="click-count">{result.clickCount === 1 ? '1 visit tracked' : `${result.clickCount ?? 0} visits tracked`}</p>
               </section>
             )}
           </div>

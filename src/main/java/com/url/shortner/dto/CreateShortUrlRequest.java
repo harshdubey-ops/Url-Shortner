@@ -1,11 +1,17 @@
 package com.url.shortner.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import org.hibernate.validator.constraints.URL;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public record CreateShortUrlRequest(
         @NotBlank(message = "URL is required")
-        @URL(message = "Please provide a valid URL")
+        @Size(max = 2048, message = "URL is too long")
+        @Pattern(
+                regexp = "^https?://[^\\s]+$",
+                flags = Pattern.Flag.CASE_INSENSITIVE,
+                message = "Please provide a valid http or https URL"
+        )
         String url
 ) {
 }

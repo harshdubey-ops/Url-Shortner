@@ -39,3 +39,6 @@ target/
 *.iml
 dist/
 frontend/dist/
+.env
+.env.local
+application-local.properties

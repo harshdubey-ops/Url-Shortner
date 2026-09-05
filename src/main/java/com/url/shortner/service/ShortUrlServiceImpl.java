@@ -3,6 +3,7 @@ package com.url.shortner.service;
 import com.url.shortner.entity.ShortUrl;
 import com.url.shortner.exception.ShortUrlNotFoundException;
 import com.url.shortner.repository.ShortUrlRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,8 +27,13 @@ public class ShortUrlServiceImpl implements ShortUrlService {
     public ShortUrl createShortUrl(String originalUrl) {
         for (int attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
             String shortCode = generateShortCode();
-            if (!shortUrlRepository.existsByShortCode(shortCode)) {
-                return shortUrlRepository.save(new ShortUrl(originalUrl, shortCode));
+            if (shortUrlRepository.existsByShortCode(shortCode)) {
+                continue;
+            }
+            try {
+                return shortUrlRepository.saveAndFlush(new ShortUrl(originalUrl, shortCode));
+            } catch (DataIntegrityViolationException ignored) {
+                // Unique constraint hit from a concurrent insert; try another code.
             }
         }
         throw new IllegalStateException("Could not generate a unique short URL. Please try again.");
