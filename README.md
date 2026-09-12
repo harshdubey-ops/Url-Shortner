@@ -28,7 +28,6 @@ The API listens on port **8081** so it matches the Vite proxy.
 
 If a password was previously committed in `application.properties`, change that MySQL password. It should be treated as leaked.
 
-
 ## Run
 
 Terminal 1 — API:
