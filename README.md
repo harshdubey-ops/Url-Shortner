@@ -17,7 +17,6 @@ Spring Boot API with a React (Vite) UI. Short links redirect on the backend and 
 
 
 
-
 Do **not** put database passwords in git. Set them in the environment:
 
 ```bash
